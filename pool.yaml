@@ -1,0 +1,139 @@
+sensor:
+  - platform: template
+    sensors:
+      auto_cycle_duration:
+        friendly_name: 'auto cycle duration'
+        value_template: >
+            {% if (states('sensor.pool_temp')  |float(20))< -1 %} 
+                 24
+            {% elif (states('sensor.pool_temp')  |float(20))< 1 %}
+                 {{ (states('sensor.pool_temp') | float(20) * -10.5 + 13 )|round(1) }}
+            {% elif (states('sensor.pool_temp')  |float(20))< 9 %}
+                 3
+            {% elif (states('sensor.pool_temp')  |float(20))< 10 %}
+                 {{ (states('sensor.pool_temp') | float(20) * 2 - 15 )|round(1) }}
+            {% elif (states('sensor.pool_temp')  |float(20))< 27 %}
+                 {{ (states('sensor.pool_temp') | float(20) * 0.529 - 0.232 )|round(1) }}
+            {% elif (states('sensor.pool_temp')  |float(20))< 31 %}
+                 {{ (states('sensor.pool_temp') | float(20) * 1.5 - 26.5 )|round(1) }}
+            {% elif (states('sensor.pool_temp')  |float(20))< 32 %}
+                 {{ (states('sensor.pool_temp') | float(20) * 4 - 104 )|round(1) }}
+            {% elif (states('sensor.pool_temp')  |float(20))> 32 %}
+                 24
+            {% else %}
+                 failed
+             {% endif %}
+        icon_template: mdi:water-sync
+        unit_of_measurement: 'hours'
+        
+
+input_boolean:
+  manual_filtration:
+    name: Manual mode
+  auto_filtration:
+    name: Automatic mode
+
+
+    
+input_datetime:
+  pump_manual_start:
+    name: manual start time
+    has_date: false
+    has_time: true
+  pump_auto_start:
+    name: auto start time
+    has_date: false
+    has_time: true
+  pump_manual_stop:
+    name: manual stop time
+    has_date: true
+    has_time: true
+  pump_auto_stop:
+    name: auto stop time
+    has_date: true
+    has_time: true
+
+
+    
+input_number:
+  manual_duration:
+    name: manual cycle duration
+    icon: mdi:water-sync
+    initial: 4
+    min: 0
+    max: 24
+    step: 0.5
+  
+
+automation:
+ -  alias: '[Pool] manual filtration cycle start'
+    description: ''
+    trigger:
+      - platform: time
+        at: input_datetime.pump_manual_start
+    condition:
+      - condition: state
+        entity_id: input_boolean.manual_filtration
+        state: 'on'
+    action:
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.pump_manual_stop
+        data:
+          datetime: >-
+            {{ now() + timedelta( hours =
+            states('input_number.manual_duration')|float(4) ) }}
+      - service: switch.turn_on
+        target:
+          entity_id: switch.pump
+    mode: single
+    
+ -  alias: '[Pool] manual filtration cycle stop'
+    description: ''
+    trigger:
+      - platform: time
+        at: input_datetime.pump_manual_stop
+    condition:
+      - condition: state
+        entity_id: input_boolean.manual_filtration
+        state: 'on'
+    action:
+      - service: switch.turn_off
+    mode: single
+    
+ -  alias: '[Pool] auto filtration cycle start'
+    description: ''
+    trigger:
+      - platform: time
+        at: input_datetime.pump_auto_start
+    condition:
+      - condition: state
+        entity_id: input_boolean.auto_filtration
+        state: 'on'
+    action:
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.pump_auto_stop
+        data:
+          datetime: >-
+            {{ now() + timedelta( hours =
+            states('sensor.auto_cycle_duration')|float(4) ) }}
+      - service: switch.turn_on
+        target:
+          entity_id: switch.pump
+    mode: single
+    
+ -  alias: '[Pool] auto filtration cycle stop'
+    description: ''
+    trigger:
+      - platform: time
+        at: input_datetime.pump_auto_stop
+    condition:
+      - condition: state
+        entity_id: input_boolean.auto_filtration
+        state: 'on'
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.pump
+    mode: single
