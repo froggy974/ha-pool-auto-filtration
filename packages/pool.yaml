@@ -25,7 +25,7 @@ sensor:
              {% endif %}
         icon_template: mdi:water-sync
         unit_of_measurement: 'hours'
-        
+
 
 input_boolean:
   manual_filtration:
@@ -34,7 +34,6 @@ input_boolean:
     name: Automatic mode
 
 
-    
 input_datetime:
   pump_manual_start:
     name: manual start time
@@ -52,7 +51,6 @@ input_datetime:
     name: auto stop time
     has_date: true
     has_time: true
-
 
     
 input_number:
@@ -85,7 +83,7 @@ automation:
             states('input_number.manual_duration')|float(4) ) }}
       - service: switch.turn_on
         target:
-          entity_id: switch.pump
+          entity_id: switch.pool_pump
     mode: single
     
  -  alias: '[Pool] manual filtration cycle stop'
@@ -99,6 +97,8 @@ automation:
         state: 'on'
     action:
       - service: switch.turn_off
+        target:
+          entity_id: switch.pool_pump
     mode: single
     
  -  alias: '[Pool] auto filtration cycle start'
@@ -120,7 +120,7 @@ automation:
             states('sensor.auto_cycle_duration')|float(4) ) }}
       - service: switch.turn_on
         target:
-          entity_id: switch.pump
+          entity_id: switch.pool_pump
     mode: single
     
  -  alias: '[Pool] auto filtration cycle stop'
@@ -135,5 +135,5 @@ automation:
     action:
       - service: switch.turn_off
         target:
-          entity_id: switch.pump
+          entity_id: switch.pool_pump
     mode: single
