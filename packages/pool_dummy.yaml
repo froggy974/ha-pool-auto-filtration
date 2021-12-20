@@ -25,7 +25,7 @@ input_boolean:
 switch:
   - platform: template
     switches:
-      pump: 
+      pool_pump: 
         friendly_name: "dummy pump switch"
         value_template: "{{ is_state('input_boolean.pump', 'on') }}"
         turn_on:
