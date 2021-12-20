@@ -78,14 +78,14 @@ cards:
           title: 'Auto filtration status :'
   - type: history-graph
     entities:
-      - entity: switch.pump
+      - entity: switch.pool_pump
     hours_to_show: 48
     refresh_interval: 0
     title: Pompe piscine
   - type: entities
     entities:
       - entity: sensor.pool_temp
-      - entity: switch.pump
+      - entity: switch.pool_pump
     state_color: false
 square: false
 columns: 1
