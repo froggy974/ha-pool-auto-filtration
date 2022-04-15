@@ -28,9 +28,8 @@ cards:
             | timestamp_custom('%B %-d, %H:%M', True) }}
 
 
-            {% if
-            as_timestamp(strptime((states('input_datetime.pump_manual_stop')),
-            '%Y, %m, %d, %H, %M, %S')) > as_timestamp(now()) %}
+            {% if as_timestamp((states('input_datetime.pump_manual_stop')),0) >
+            as_timestamp(now()) %}
               **end of filtration manual filtration planned at :**
             {{ (as_timestamp(states('input_datetime.pump_manual_stop'))) |
             timestamp_custom('%B %-d, %H:%M', True) }}
@@ -53,39 +52,38 @@ cards:
           entities:
             - entity: input_datetime.pump_auto_start
             - entity: sensor.auto_cycle_duration
+            - entity: sensor.pompe_piscine_on_today
           show_header_toggle: false
         - type: markdown
-          content: >
+          content: >+
+
+            {% if
+            states.automation.pool_auto_filtration_cycle_start.attributes.last_triggered
+            == None %}
+
+            None
+
+            {% else %}
+
             **Last auto filtration started at :**
 
             {{
             (as_timestamp(states.automation.pool_auto_filtration_cycle_start.attributes.last_triggered))
-            | timestamp_custom('%B %-d, %H:%M', True) }}
-
-
-            {% if
-            as_timestamp(strptime((states('input_datetime.pump_auto_stop')),
-            '%Y, %m, %d, %H, %M, %S')) > as_timestamp(now()) %}
-              **end of filtration planned at:**
-             {{ (as_timestamp(states('input_datetime.pump_auto_stop'))) | timestamp_custom('%B %-d, %H:%M', True) }}
-            {%elif states('sensor.auto_cycle_duration')|int == 24  %}
-               **continuous filtration** ( 24/24)
-            {% else %}
-              *{{state_attr('input_datetime.pump_auto_stop', 'friendly_name')}}  is not set yet 
-            (probably because start time is in the future)*
+            | timestamp_custom('%A, %B %-d, %H:%M', True) }}
 
             {% endif %}
+
           title: 'Auto filtration status :'
   - type: history-graph
     entities:
-      - entity: switch.pool_pump
-    hours_to_show: 48
+      - entity: switch.tz3000_pompe_piscine
+    hours_to_show: 24
     refresh_interval: 0
     title: Pompe piscine
   - type: entities
     entities:
-      - entity: sensor.pool_temp
-      - entity: switch.pool_pump
+      - entity: sensor.pool_water_temp_avg
+      - entity: switch.tz3000_pompe_piscine
     state_color: false
 square: false
 columns: 1
