@@ -1,30 +1,65 @@
 sensor:
   - platform: template
     sensors:
+      pool_water_temp_avg:
+        friendly_name: "pool water"
+        unique_id: sensor.pool_water_temp_avg
+        unit_of_measurement: "°C"
+        icon_template: mdi:coolant-temperature
+        value_template: >
+          {{ ((float(states('sensor.pool_water_temp')) 
+          + float(states('sensor.pool_water_temp_2'))) / 2) | round(1, default=0)
+          }}
+
+  - platform: template
+    sensors:
       auto_cycle_duration:
         friendly_name: 'auto cycle duration'
         value_template: >
-            {% if (states('sensor.pool_temp')  |float(20))< -1 %} 
+            {% if (states('sensor.pool_water_temp_avg')  |float(20))< -1 %} 
                  24
-            {% elif (states('sensor.pool_temp')  |float(20))< 1 %}
-                 {{ (states('sensor.pool_temp') | float(20) * -10.5 + 13 )|round(1) }}
-            {% elif (states('sensor.pool_temp')  |float(20))< 9 %}
+            {% elif (states('sensor.pool_water_temp_avg')  |float(20))< 1 %}
+                 {{ (states('sensor.pool_water_temp_avg') | float(20) * -10.5 + 13 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp_avg')  |float(20))< 9 %}
                  3
-            {% elif (states('sensor.pool_temp')  |float(20))< 10 %}
-                 {{ (states('sensor.pool_temp') | float(20) * 2 - 15 )|round(1) }}
-            {% elif (states('sensor.pool_temp')  |float(20))< 27 %}
-                 {{ (states('sensor.pool_temp') | float(20) * 0.529 - 0.232 )|round(1) }}
-            {% elif (states('sensor.pool_temp')  |float(20))< 31 %}
-                 {{ (states('sensor.pool_temp') | float(20) * 1.5 - 26.5 )|round(1) }}
-            {% elif (states('sensor.pool_temp')  |float(20))< 32 %}
-                 {{ (states('sensor.pool_temp') | float(20) * 4 - 104 )|round(1) }}
-            {% elif (states('sensor.pool_temp')  |float(20))> 32 %}
+            {% elif (states('sensor.pool_water_temp_avg')  |float(20))< 10 %}
+                 {{ (states('sensor.pool_water_temp_avg') | float(20) * 2 - 15 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp_avg')  |float(20))< 27 %}
+                 {{ (states('sensor.pool_water_temp_avg') | float(20) * 0.529 - 0.232 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp_avg')  |float(20))< 31 %}
+                 {{ (states('sensor.pool_water_temp_avg') | float(20) * 1.5 - 26.5 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp_avg')  |float(20))< 32 %}
+                 {{ (states('sensor.pool_water_temp_avg') | float(20) * 4 - 104 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp_avg')  |float(20))> 32 %}
                  24
             {% else %}
                  failed
              {% endif %}
         icon_template: mdi:water-sync
         unit_of_measurement: 'hours'
+        # icon_template: >-
+        #   {% if states('sensor.pool_water_temp_avg')|int < 8 %}
+        #     mdi:weather-snowy
+        #   {% elif states('sensor.auto_cycle_duration')|int >= 8 %}
+        #     mdi:numeric-{{ states('sensor.auto_cycle_duration')|int }}-box-multiple-outline
+        #   {% else %}
+        #     mdi:weather-sunny
+        #   {% endif %}
+   
+  - platform: statistics
+    name: "pool water temp avg"
+    entity_id: sensor.pool_water_temp_avg
+    state_characteristic: mean
+    max_age:
+      hours: 24     
+        
+  - platform: history_stats
+    name: pompe_piscine_on_today
+    entity_id: switch.tz3000_pompe_piscine
+    state: 'on'
+    type: time
+    start: '{{ now().replace(hour=0, minute=0, second=0) }}'
+    end: '{{ now() }}'
 
 
 input_boolean:
@@ -42,14 +77,6 @@ input_datetime:
   pump_auto_start:
     name: auto start time
     has_date: false
-    has_time: true
-  pump_manual_stop:
-    name: manual stop time
-    has_date: true
-    has_time: true
-  pump_auto_stop:
-    name: auto stop time
-    has_date: true
     has_time: true
 
     
@@ -74,31 +101,26 @@ automation:
         entity_id: input_boolean.manual_filtration
         state: 'on'
     action:
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.pump_manual_stop
-        data:
-          datetime: >-
-            {{ now() + timedelta( hours =
-            states('input_number.manual_duration')|float(4) ) }}
       - service: switch.turn_on
         target:
-          entity_id: switch.pool_pump
+          entity_id: switch.tz3000_pompe_piscine
     mode: single
     
  -  alias: '[Pool] manual filtration cycle stop'
     description: ''
     trigger:
-      - platform: time
-        at: input_datetime.pump_manual_stop
+      - platform: numeric_state
+        entity_id: sensor.pompe_piscine_on_today
+        above: input_number.manual_duration
     condition:
       - condition: state
         entity_id: input_boolean.manual_filtration
         state: 'on'
+    
     action:
       - service: switch.turn_off
         target:
-          entity_id: switch.pool_pump
+          entity_id: switch.tz3000_pompe_piscine
     mode: single
     
  -  alias: '[Pool] auto filtration cycle start'
@@ -111,29 +133,19 @@ automation:
         entity_id: input_boolean.auto_filtration
         state: 'on'
     action:
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.pump_auto_stop
-        data:
-          datetime: >-
-            {{ now() + timedelta( hours =
-            states('sensor.auto_cycle_duration')|float(4) ) }}
       - service: switch.turn_on
         target:
-          entity_id: switch.pool_pump
+          entity_id: switch.tz3000_pompe_piscine
     mode: single
     
  -  alias: '[Pool] auto filtration cycle stop'
     description: ''
     trigger:
-      - platform: time
-        at: input_datetime.pump_auto_stop
-    condition:
-      - condition: state
-        entity_id: input_boolean.auto_filtration
-        state: 'on'
+      - platform: numeric_state
+        entity_id: sensor.pompe_piscine_on_today
+        above: sensor.auto_cycle_duration
     action:
       - service: switch.turn_off
         target:
-          entity_id: switch.pool_pump
+          entity_id: switch.tz3000_pompe_piscine
     mode: single
