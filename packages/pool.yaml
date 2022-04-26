@@ -1,15 +1,16 @@
 sensor:
-  - platform: template
-    sensors:
-      pool_water_temp_avg:
-        friendly_name: "pool water"
-        unique_id: sensor.pool_water_temp_avg
-        unit_of_measurement: "°C"
-        icon_template: mdi:coolant-temperature
-        value_template: >
-          {{ ((float(states('sensor.pool_water_temp')) 
-          + float(states('sensor.pool_water_temp_2'))) / 2) | round(1, default=0)
-          }}
+# if you use 2 temperatures sensors, you can uncomment the part below to make a average sensor temperature
+#  - platform: template
+#    sensors:
+#      pool_water_temp_avg:
+#        friendly_name: "pool water"
+#        unique_id: sensor.pool_water_temp_avg
+#        unit_of_measurement: "°C"
+#        icon_template: mdi:coolant-temperature
+#        value_template: >
+#          {{ ((float(states('sensor.pool_water_temp')) 
+#          + float(states('sensor.pool_water_temp_2'))) / 2) | round(1, default=0)
+#          }}
 
   - platform: template
     sensors:
