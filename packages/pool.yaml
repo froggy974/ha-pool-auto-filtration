@@ -145,6 +145,10 @@ automation:
       - platform: numeric_state
         entity_id: sensor.pompe_piscine_on_today
         above: sensor.auto_cycle_duration
+    condition:
+      - condition: state
+        entity_id: input_boolean.auto_filtration
+        state: 'on'
     action:
       - service: switch.turn_off
         target:
