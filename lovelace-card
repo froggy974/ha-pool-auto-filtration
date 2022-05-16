@@ -71,7 +71,16 @@ cards:
             (as_timestamp(states.automation.pool_auto_filtration_cycle_start.attributes.last_triggered))
             | timestamp_custom('%A, %B %-d, %H:%M', True) }}
 
+
+            **Autofiltration will stop at :** 
+
+            {{ (as_timestamp( (
+            strptime(states('input_datetime.pump_auto_start'), '%H:%M:%S')) +
+            timedelta( hours = states('sensor.auto_cycle_duration')|float(1)
+            )))| timestamp_custom("%H:%M:%S") }}
+
             {% endif %}
+
 
           title: 'Auto filtration status :'
   - type: history-graph
