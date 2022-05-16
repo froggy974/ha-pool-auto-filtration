@@ -86,7 +86,7 @@ cards:
   - type: history-graph
     entities:
       - entity: switch.tz3000_pompe_piscine
-    hours_to_show: 24
+    hours_to_show: 48
     refresh_interval: 0
     title: Pompe piscine
   - type: entities
