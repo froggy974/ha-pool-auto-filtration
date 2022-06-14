@@ -1,0 +1,147 @@
+type: vertical-stack
+cards:
+  - type: entities
+    entities:
+      - entity: sensor.pool_water_kalman
+      - entity: input_boolean.auto_filtration
+      - entity: input_select.f_mode
+    show_header_toggle: false
+    title: ha-pool-auto-filtration
+  - type: vertical-stack
+    cards:
+      - type: conditional
+        conditions:
+          - entity: input_select.f_mode
+            state: abacus
+        card:
+          type: vertical-stack
+          cards:
+            - type: entities
+              entities:
+                - entity: input_datetime.pump_auto_start
+                - entity: input_number.ratio_abacus
+                - entity: sensor.auto_cycle_duration_abacus
+                - entity: sensor.pompe_piscine_on_today
+                - entity: sensor.filtration_uptime_since_last_auto_start
+              show_header_toggle: false
+            - type: markdown
+              content: >
+                |   |    |
+
+                |---|---:|
+
+                | **Last auto filtration started at** :
+                &nbsp;&nbsp;&nbsp;&nbsp;| *{{
+                as_timestamp(state_attr('automation.pool_filtration_cycle_start',
+                'last_triggered'))|timestamp_custom('%a, %B %-d, %H:%M', True)
+                }}* |
+
+                | **filtration ran today**:|
+                *{{states('sensor.pompe_piscine_on_today') }}* hours  |
+
+                | **Auto filtration will stop at**: | *{{(as_timestamp(now()+
+                timedelta( hours =
+                states('sensor.auto_cycle_duration_abacus')|float(1) -
+                states('sensor.pompe_piscine_on_today')|float(1)|float(1))))|
+                timestamp_custom("%H:%M:%S")}}* |
+            - type: picture
+              image: /local/IMG/abacus.png
+              tap_action:
+                action: call-service
+                service: input_number.set_value
+                service_data:
+                  value: 120
+                target:
+                  entity_id: input_number.ratio_abacus
+              hold_action:
+                action: call-service
+                service: input_number.set_value
+                service_data:
+                  value: 100
+                target:
+                  entity_id: input_number.ratio_abacus
+      - type: conditional
+        conditions:
+          - entity: input_select.f_mode
+            state: standard
+        card:
+          type: vertical-stack
+          cards:
+            - type: entities
+              entities:
+                - entity: input_datetime.pump_auto_start
+                - entity: sensor.auto_cycle_duration_std
+                - entity: sensor.pompe_piscine_on_today
+                - entity: sensor.filtration_uptime_since_last_auto_start
+            - type: markdown
+              content: >
+                |   |    |
+
+                |---|---:|
+
+                | **Last auto filtration started at** :
+                &nbsp;&nbsp;&nbsp;&nbsp;| *{{
+                as_timestamp(state_attr('automation.pool_filtration_cycle_start',
+                'last_triggered'))|timestamp_custom('%a, %B %-d, %H:%M', True)
+                }}* |
+
+                | **filtration ran today**:|
+                *{{states('sensor.pompe_piscine_on_today') }}* hours  |
+
+                | **Auto filtration will stop at**: | *{{(as_timestamp(now()+
+                timedelta( hours =
+                states('sensor.auto_cycle_duration_std')|float(1) -
+                states('sensor.pompe_piscine_on_today')|float(1)|float(1))))|
+                timestamp_custom("%H:%M:%S")}}* |
+            - type: picture
+              image: /local/IMG/standard.png
+              tap_action:
+                action: none
+              hold_action:
+                action: none
+      - type: conditional
+        conditions:
+          - entity: input_select.f_mode
+            state: manual
+        card:
+          type: vertical-stack
+          cards:
+            - type: entities
+              entities:
+                - entity: input_datetime.pump_manual_start
+                - entity: input_number.manual_duration
+                - entity: sensor.pompe_piscine_on_today
+              show_header_toggle: false
+            - type: markdown
+              content: >-
+                |   |    |
+
+                |---|---:|
+
+                | **Last manual filtration started at** :
+                &nbsp;&nbsp;&nbsp;&nbsp;| *{{
+                (as_timestamp(states.automation.pool_manual_filtration_cycle_start.attributes.last_triggered))
+                | timestamp_custom('%a, %B %-d, %H:%M', True) }}* |
+
+                | **filtration ran today**:|
+                *{{states('sensor.pompe_piscine_on_today') }}* hours  |
+
+                | **Manual filtration will stop at**: |
+                *{{(as_timestamp(state_attr('automation.pool_manual_filtration_cycle_start',
+                'last_triggered')+ timedelta(  hours =
+                states('input_number.manual_duration')|float(1)
+                )))|timestamp_custom("%H:%M:%S") }}*  |
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: call-service
+                service: automation.trigger
+                service_data: {}
+                target:
+                  entity_id: automation.pool_manual_filtration_cycle_start
+              entity: automation.pool_manual_filtration_cycle_start
+              icon: mdi:water-sync
+              icon_height: 50px
+              name: manual filtration forced start
+              show_state: false
