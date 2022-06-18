@@ -64,7 +64,7 @@ sensor:
     name: filtration UpTime since last auto start
     state: 'on'
     entity_id: switch.tz3000_pompe_piscine
-    start: "{{state_attr('automation.pool_filtration_cycle_start', 'last_triggered') }}"
+    start: "{{(state_attr('automation.pool_filtration_cycle_start', 'last_triggered') - timedelta(minutes=1)) }}"
     end: "{{ now() }}"
 
 
