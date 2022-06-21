@@ -60,12 +60,15 @@ sensor:
     start: '{{ now().replace(hour=0, minute=0, second=0) }}'
     end: '{{ now() }}'
     
-  - platform: history_stats
-    name: filtration UpTime since last auto start
-    state: 'on'
-    entity_id: switch.tz3000_pompe_piscine
-    start: "{{(state_attr('automation.pool_filtration_cycle_start', 'last_triggered') - timedelta(minutes=1)) }}"
-    end: "{{ now() }}"
+  - platform: template
+    sensors:
+      last_autostart_triggered_since:
+        friendly_name: 'duration since last autofiltration was triggered'
+        value_template: >
+         {{ (( now().timestamp() - as_timestamp(state_attr('automation.pool_filtration_cycle_start','last_triggered')) ) / 3600 )
+           | round(2) }}
+        icon_template: mdi:chart-areaspline-variant
+        unit_of_measurement: 'hours'
 
 
 input_boolean:
@@ -139,7 +142,7 @@ automation:
         entity_id: sensor.pompe_piscine_on_today
         above: sensor.auto_cycle_duration_abacus
       - platform: numeric_state
-        entity_id: sensor.filtration_uptime_since_last_auto_start
+        entity_id: sensor.last_autostart_triggered_since
         above: sensor.auto_cycle_duration_abacus
     condition:
       - condition: state
@@ -164,7 +167,7 @@ automation:
         entity_id: sensor.pompe_piscine_on_today
         above: sensor.auto_cycle_duration_std
       - platform: numeric_state
-        entity_id: sensor.filtration_uptime_since_last_auto_start
+        entity_id: sensor.last_autostart_triggered_since
         above: sensor.auto_cycle_duration_std      
     condition:
       - condition: state
