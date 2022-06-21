@@ -22,7 +22,7 @@ cards:
                 - entity: input_number.ratio_abacus
                 - entity: sensor.auto_cycle_duration_abacus
                 - entity: sensor.pompe_piscine_on_today
-                - entity: sensor.filtration_uptime_since_last_auto_start
+                - entity: sensor.last_autostart_triggered_since
               show_header_toggle: false
             - type: markdown
               content: >
@@ -72,7 +72,7 @@ cards:
                 - entity: input_datetime.pump_auto_start
                 - entity: sensor.auto_cycle_duration_std
                 - entity: sensor.pompe_piscine_on_today
-                - entity: sensor.filtration_uptime_since_last_auto_start
+                - entity: sensor.last_autostart_triggered_since
             - type: markdown
               content: >
                 |   |    |
