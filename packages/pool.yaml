@@ -180,9 +180,6 @@ automation:
       - service: switch.turn_off
         target:
           entity_id: switch.tz3000_pompe_piscine
-      - service: notify.persistent_notification
-        data:
-          message: pump stopped by standard mode
     mode: single
     
 
