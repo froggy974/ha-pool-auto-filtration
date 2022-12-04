@@ -8,7 +8,9 @@ sensor:
             {% if (states('sensor.pool_water_kalman')  |float(20))< 1 %} 
                  24
             {% elif (states('sensor.pool_water_kalman')  |float(20))< 9 %}
-                 (3*(states('input_number.ratio_abacus') | float(1) /100))|round(2,"ceil", 2)
+                 {{
+                 states('input_number.ratio_abacus')|float(1)|round(1,"ceil", 2)/100*3
+                 }}
             {% elif (states('sensor.pool_water_kalman')  |float(20))<= 32 %}
                  {{ 
                  min([24,(
