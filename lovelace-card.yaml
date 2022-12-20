@@ -6,7 +6,6 @@ cards:
       - entity: input_boolean.auto_filtration
       - entity: input_select.f_mode
     show_header_toggle: false
-    title: ha-pool-auto-filtration
   - type: vertical-stack
     cards:
       - type: conditional
@@ -39,11 +38,12 @@ cards:
                 | **filtration ran today**:|
                 *{{states('sensor.pompe_piscine_on_today') }}* hours  |
 
-                | **Auto filtration will stop at**: | *{{(as_timestamp(now()+
-                timedelta( hours =
-                states('sensor.auto_cycle_duration_abacus')|float(1) -
+                {% if is_state("switch.tz3000_pompe_piscine", "on") -%} | **Auto
+                filtration will stop at**: | *{{(as_timestamp(now()+ timedelta(
+                hours = states('sensor.auto_cycle_duration_abacus')|float(1) -
                 states('sensor.pompe_piscine_on_today')|float(1)|float(1))))|
-                timestamp_custom("%H:%M:%S")}}* |
+                timestamp_custom("%H:%M:%S")}}* | {%- else -%} | **Auto
+                filtration will stop at**: |N/A| {%- endif %}
             - type: picture
               image: /local/IMG/abacus.png
               tap_action:
@@ -88,13 +88,14 @@ cards:
                 | **filtration ran today**:|
                 *{{states('sensor.pompe_piscine_on_today') }}* hours  |
 
-                | **Auto filtration will stop at**: | *{{(as_timestamp(now()+
-                timedelta( hours =
-                states('sensor.auto_cycle_duration_std')|float(1) -
+                {% if is_state("switch.tz3000_pompe_piscine", "on") -%} | **Auto
+                filtration will stop at**: | *{{(as_timestamp(now()+ timedelta(
+                hours = states('sensor.auto_cycle_duration_std')|float(1) -
                 states('sensor.pompe_piscine_on_today')|float(1)|float(1))))|
-                timestamp_custom("%H:%M:%S")}}* |
+                timestamp_custom("%H:%M:%S")}}* | {%- else -%} | **Auto
+                filtration will stop at**: |N/A| {%- endif %}
             - type: picture
-              image: /local/IMG/standard.png
+              image: /local/IMG/oklyn.png
               tap_action:
                 action: none
               hold_action:
