@@ -95,7 +95,7 @@ cards:
                 timestamp_custom("%H:%M:%S")}}* | {%- else -%} | **Auto
                 filtration will stop at**: |N/A| {%- endif %}
             - type: picture
-              image: /local/IMG/oklyn.png
+              image: /local/IMG/standard.png
               tap_action:
                 action: none
               hold_action:
