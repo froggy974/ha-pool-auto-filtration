@@ -11,7 +11,7 @@ input_number:
 sensor:
   - platform: template
     sensors:
-      pool_water_kalman:
+      pool_water_temp:
         friendly_name: " dummy pool temp"
         value_template: >
          {{ states('input_number.dummy_temp_piscine') }}
