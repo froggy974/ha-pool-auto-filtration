@@ -1,59 +1,65 @@
-sensor:
-  - platform: template
-    sensors:
-      auto_cycle_duration_abacus:
-        friendly_name: 'auto cycle duration (abacus)'
-        value_template: >
 
-            {% if (states('sensor.pool_water_kalman')  |float(20))< 1 %} 
+template:
+  - sensor:
+     - name: 'auto cycle duration abacus'
+       state: >
+            {% if (states('sensor.pool_water_temp')  |float(20))< 1 %} 
                  24
-            {% elif (states('sensor.pool_water_kalman')  |float(20))< 9 %}
+            {% elif (states('sensor.pool_water_temp')  |float(20))< 9 %}
                  {{
                  states('input_number.ratio_abacus')|float(1)|round(1,"ceil", 2)/100*3
                  }}
-            {% elif (states('sensor.pool_water_kalman')  |float(20))<= 32 %}
+            {% elif (states('sensor.pool_water_temp')  |float(20))<= 32 %}
                  {{ 
                  min([24,(
-                 0.00335*(states('sensor.pool_water_kalman') | float(20))**3 
-                 - 0.14953*(states('sensor.pool_water_kalman') | float(20))**2  
-                 + 2.43489*(states('sensor.pool_water_kalman') | float(20)) 
+                 0.00335*(states('sensor.pool_water_temp') | float(20))**3 
+                 - 0.14953*(states('sensor.pool_water_temp') | float(20))**2  
+                 + 2.43489*(states('sensor.pool_water_temp') | float(20)) 
                  - 9.72859)*(states('input_number.ratio_abacus') | float(1) /100
                  )])|round(2,"ceil", 2)
                  }}
-            {% elif (states('sensor.pool_water_kalman')  |float(20))> 32 %}
+            {% elif (states('sensor.pool_water_temp')  |float(20))> 32 %}
                  24
             {% else %}
                  failed
              {% endif %}
-        icon_template: mdi:chart-bell-curve
-        unit_of_measurement: 'hours'
+       icon: 'mdi:chart-bell-curve'
+       unit_of_measurement: "hours"
         
         
-      auto_cycle_duration_std:
-        friendly_name: 'auto cycle duration (standard)'
-        value_template: >
-            {% if (states('sensor.pool_water_kalman')  |float(20))< -1 %} 
+     - name: 'auto_cycle_duration_std:'
+       state: >
+            {% if (states('sensor.pool_water_temp')  |float(20))< -1 %} 
                  24
-            {% elif (states('sensor.pool_water_kalman')  |float(20))< 1 %}
-                 {{ (states('sensor.pool_water_kalman') | float(20) * -10.5 + 13 )|round(1) }}
-            {% elif (states('sensor.pool_water_kalman')  |float(20))< 9 %}
+            {% elif (states('sensor.pool_water_temp')  |float(20))< 1 %}
+                 {{ (states('sensor.pool_water_temp') | float(20) * -10.5 + 13 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp')  |float(20))< 9 %}
                  3
-            {% elif (states('sensor.pool_water_kalman')  |float(20))< 10 %}
-                 {{ (states('sensor.pool_water_kalman') | float(20) * 2 - 15 )|round(1) }}
-            {% elif (states('sensor.pool_water_kalman')  |float(20))< 27 %}
-                 {{ (states('sensor.pool_water_kalman') | float(20) * 0.529 - 0.232 )|round(1) }}
-            {% elif (states('sensor.pool_water_kalman')  |float(20))< 31 %}
-                 {{ (states('sensor.pool_water_kalman') | float(20) * 1.5 - 26.5 )|round(1) }}
-            {% elif (states('sensor.pool_water_kalman')  |float(20))< 32 %}
-                 {{ (states('sensor.pool_water_kalman') | float(20) * 4 - 104 )|round(1) }}
-            {% elif (states('sensor.pool_water_kalman')  |float(20))> 32 %}
+            {% elif (states('sensor.pool_water_temp')  |float(20))< 10 %}
+                 {{ (states('sensor.pool_water_temp') | float(20) * 2 - 15 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp')  |float(20))< 27 %}
+                 {{ (states('sensor.pool_water_temp') | float(20) * 0.529 - 0.232 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp')  |float(20))< 31 %}
+                 {{ (states('sensor.pool_water_temp') | float(20) * 1.5 - 26.5 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp')  |float(20))< 32 %}
+                 {{ (states('sensor.pool_water_temp') | float(20) * 4 - 104 )|round(1) }}
+            {% elif (states('sensor.pool_water_temp')  |float(20))> 32 %}
                  24
             {% else %}
                  failed
              {% endif %}
-        icon_template: mdi:water-sync
-        unit_of_measurement: 'hours'
+       icon: mdi:water-sync
+       unit_of_measurement: 'hours'
 
+     - name: last_autostart_triggered_since
+       state: >
+         {{ (( now().timestamp() - as_timestamp(state_attr('automation.pool_filtration_cycle_start','last_triggered')) ) / 3600 )
+           | round(2) }}
+       icon: mdi:chart-areaspline-variant
+       unit_of_measurement: 'hours'
+        
+
+sensor:
   - platform: history_stats
     name: pompe_piscine_on_today
     entity_id: switch.tz3000_pompe_piscine
@@ -61,16 +67,6 @@ sensor:
     type: time
     start: '{{ now().replace(hour=0, minute=0, second=0) }}'
     end: '{{ now() }}'
-    
-  - platform: template
-    sensors:
-      last_autostart_triggered_since:
-        friendly_name: 'duration since last autofiltration was triggered'
-        value_template: >
-         {{ (( now().timestamp() - as_timestamp(state_attr('automation.pool_filtration_cycle_start','last_triggered')) ) / 3600 )
-           | round(2) }}
-        icon_template: mdi:chart-areaspline-variant
-        unit_of_measurement: 'hours'
 
 
 input_boolean:
@@ -95,16 +91,15 @@ input_number:
   manual_duration:
     name: manual cycle duration
     icon: mdi:water-sync
-    #initial: 4
+#    initial: 4
     min: 0
     max: 24
     step: 0.5
 
-    
   ratio_abacus:
     name: ratio abacus
     icon: mdi:percent
-    #initial: 100
+#    initial: 100
     min: 1
     max: 200
     step: 1
@@ -117,12 +112,13 @@ input_select:
       - manual
       - standard
       - abacus 
-    #initial: abacus
+#    initial: abacus
     icon: mdi:dip-switch    
 
 automation:
 
  -  alias: '[Pool] filtration cycle start'
+    id: filtration_cycle_start
     description: ''
     trigger:
       - platform: time
@@ -138,6 +134,7 @@ automation:
     mode: single
     
  -  alias: '[Pool] auto filtration cycle stop (abacus)'
+    id: auto_filtration_cycle_stop_abacus
     description: ''
     trigger:
       - platform: numeric_state
@@ -157,12 +154,13 @@ automation:
       - service: switch.turn_off
         target:
           entity_id: switch.tz3000_pompe_piscine
-      - service: notify.persistent_notification
-        data:
-          message: pump stopped by abacus mode
+    #   - service: notify.persistent_notification
+    #     data:
+    #       message: pump stopped by abacus mode
     mode: single 
     
- -  alias: '[Pool] auto filtration cycle stop (standard )'
+ -  alias: '[Pool] auto filtration cycle stop (standard oklyn)'
+    id: auto_filtration_cycle_stop_standard
     description: ''
     trigger:
       - platform: numeric_state
@@ -182,10 +180,14 @@ automation:
       - service: switch.turn_off
         target:
           entity_id: switch.tz3000_pompe_piscine
+      - service: notify.persistent_notification
+        data:
+          message: pump stopped by standard(oklyn) mode
     mode: single
     
 
  -  alias: '[Pool] manual filtration cycle start'
+    id: manual_filtration cycle_start
     description: ''
     trigger:
       - platform: time
@@ -206,6 +208,7 @@ automation:
 
 
  -  alias: '[Pool] manual filtration cycle stop'
+    id: manual_filtration_cycle_stop
     description: ''
     trigger:
       - platform: numeric_state
